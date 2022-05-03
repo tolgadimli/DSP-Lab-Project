@@ -87,14 +87,9 @@ while CONTINUE:
         #print("AMP MOD")
         
     elif CASE == 2:     # Alien
-        output_block = pitch_shifter(RATE, start_index, input_block, fr = 20, shift = 5, phase = 0 )
+        output_block = pitch_shifter(RATE, input_block, fr = 20, shift = 5)
         output_block = np.round(output_block).astype(int)
-        #print("Alien MOD")
-        
-    elif CASE == 3:     # Robot
-        output_block = amplitude_mod(RATE, start_index, input_block, fc = 1000, A = 2, phase = 0 )
-        output_block = np.round(output_block).astype(int)
-        #print("Robot MOD")    
+        #print("Alien MOD")  
 
     binary_data = struct.pack('h' * BLOCKLEN, *output_block)
     stream_out.write(binary_data)
