@@ -1,5 +1,6 @@
 from math import sin, cos, pi
 import numpy as np
+import scipy.signal as signal
 from scipy.signal import hilbert
 
 def amplitude_mod(RATE, index, x, fc = 2000, A = 5000, phase = 0 ):
@@ -11,13 +12,10 @@ def amplitude_mod(RATE, index, x, fc = 2000, A = 5000, phase = 0 ):
     return y
 
 
-def pitch_shifter(RATE, x, fr = 20, shift = 5):
-    fr = 20         # A larger number for fr means less reverb.
-    sz = RATE//fr   # Read and process 1/fr second at a time.
-    shift = 100//fr # shifting 100 Hz
+def pitch_shifter(RATE, index, x, shift = 5):
+    sz = 2*1024   # Read and process 1/fr second at a time.
     x_arr = np.asarray(x)
-     
-    lf = np.fft.rfft(x, 100)
+    lf = np.fft.rfft(x_arr, 1024) 
     lf = np.roll(lf, shift)
     lf[0:shift] = 0
     nl = np.fft.irfft(lf)
@@ -26,14 +24,15 @@ def pitch_shifter(RATE, x, fr = 20, shift = 5):
     return ns    
         
     
-def darth_vader(RATE, x, speed_factor, delay, low_freq):
+def darth_vader(RATE, index, x, speed_factor, delay, low_freq):
     # speed
-    num = len(x)
-    sound_index = np.round(np.arange(0, num, speed_factor))
-	slow_x = x[sound_index[sound_index < num].astype(int)]
+    x_arr = np.asarray(x)
+    num = len(x_arr)
+    sound_index = np.round(np.arange(0, 1024, speed_factor)).astype(int)
+    slow_x = x_arr[sound_index[:1024]]
     
     # echo
-    echo_x = np.zeros(num)
+    echo_x = slow_x
     output_delay = delay * RATE
 
     for count, e in enumerate(slow_x):
@@ -43,9 +42,23 @@ def darth_vader(RATE, x, speed_factor, delay, low_freq):
     # lowpass
     nyquist = RATE / 2.0
     cutoff = low_freq / nyquist
-    x, y = signal.butter(order=4, cutoff, btype='lowpass', analog=False)
+    x, y = signal.butter(4, 0.4, btype='lowpass', analog=False)
     low_x = signal.filtfilt(x, y, echo_x)
-    
+
+    return low_x
+
+
+def baby(RATE, start_index, x, speed_factor=2.0, freq=200):
+    # speed
+    x_arr = np.asarray(x)
+    num = len(x_arr)
+    sound_index = np.round(np.arange(0, num, speed_factor)).astype(int)
+    slow_x = x_arr[sound_index[:1024//2]]
+    slow_x = np.repeat(slow_x,2)
+
+    x, y = signal.butter(4, 0.5, btype='lowpass', analog=False)
+    low_x = signal.filtfilt(x, y, slow_x)
+
     return low_x
     
 # def robotic(RATE, index, m, fc = 2000):
