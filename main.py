@@ -19,7 +19,17 @@ def case_amplitude_mod():
     global CASE
     CASE = 1
 
+def case_alien():
+    global CASE
+    CASE = 2
 
+def case_darth_vader():
+    global CASE
+    CASE = 3
+
+def case_baby():
+    global CASE
+    CASE = 4
 
 ################################ MAIN PROGRAM
 
@@ -35,10 +45,16 @@ CASE = 0
 root = Tk.Tk()
 
 B_amp = Tk.Button(root, text = 'Amplitude Modulation', command = case_amplitude_mod)
+B_dv = Tk.Button(root, text = 'Darth Vader', command = case_darth_vader)
+B_al = Tk.Button(root, text = 'Alien', command = case_alien)
+B_bb = Tk.Button(root, text = 'Baby', command = case_baby)
 B_quit = Tk.Button(root, text = 'Quit', command = fun_quit)
 
 # Place widgets
 B_amp.pack(side = Tk.BOTTOM, fill = Tk.X)
+B_dv.pack(side = Tk.BOTTOM, fill = Tk.X)
+B_al.pack(side = Tk.BOTTOM, fill = Tk.X)
+B_bb.pack(side = Tk.BOTTOM, fill = Tk.X)
 B_quit.pack(side = Tk.BOTTOM, fill = Tk.X)
 
 # Open an output audio stream
@@ -63,7 +79,7 @@ stream_out = p.open(
   # specify low frames_per_buffer to reduce latency
 
 # Buffer to store past signal values. Initialize to zero.
-BUFFER_LEN =  2*1024         # Set buffer length.
+BUFFER_LEN =  20*1024         # Set buffer length.
 buffer = BUFFER_LEN * [0]   # list of zeros
 print('The buffer is %d samples long.' % BUFFER_LEN)
 n = 0
@@ -87,9 +103,20 @@ while CONTINUE:
         #print("AMP MOD")
         
     elif CASE == 2:     # Alien
-        output_block = pitch_shifter(RATE, input_block, fr = 20, shift = 5)
+        output_block = pitch_shifter(RATE, start_index, input_block, shift = 5)
         output_block = np.round(output_block).astype(int)
-        #print("Alien MOD")  
+        #print("Alien")
+
+    elif CASE == 3:     # Darth Vader
+        output_block = darth_vader(RATE, start_index, input_block, speed_factor=0.8, delay=0.02, low_freq=200)
+        output_block = np.round(output_block).astype(int)
+        #print("Darth Vader") 
+
+    elif CASE == 4:     # Baby
+        output_block = pitch_shifter(RATE, start_index, input_block, shift = 20)
+        output_block = baby(RATE, start_index, output_block, speed_factor=2.0, freq=0.4)
+        output_block = np.round(output_block).astype(int)
+        #print("Baby") 
 
     binary_data = struct.pack('h' * BLOCKLEN, *output_block)
     stream_out.write(binary_data)
